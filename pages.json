@@ -1,0 +1,27 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "密码管理器"
+			}
+		}
+	    ,{
+            "path" : "pages/home/home",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+    ],
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "密码管理器",
+		"navigationBarBackgroundColor": "#1761E9",
+		"backgroundColor": "#1761E9",
+		"rpxCalcMaxDeviceWidth":4096
+	},
+	"uniIdRouter": {}
+}
