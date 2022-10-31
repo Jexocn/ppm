@@ -16,13 +16,6 @@
 			<view class="length-box">
 				<view class="length-title"> {{'长度：'+passwdLen}}</view>
 				<view class="length-button" @tap="lengthAdd(-1)">-</view>
-<!-- 				<view class="length-slide-bar">
-					<movable-area class="length-slider-ma">
-						<movable-view class="length-slider" direction="horizontal" :x="lengthX" @change="lengthSlide" :animation="false">
-							{{'<>'}}
-						</movable-view>
-					</movable-area>
-				</view> -->
 				<slider :value="passwdLen" min="1" :max="passwdMaxlen" step="1" @change="sliderChange" @changing="sliderChange" style="width: 360rpx;"/>
 				<view class="length-button" @tap="lengthAdd(1)">+</view>
 			</view>
