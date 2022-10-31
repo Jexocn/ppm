@@ -44,12 +44,8 @@
 					{id:2, title:'123', selected:true, disabled:true},
 					{id:3, title:'#$&', selected:false, disabled:false}
 				],
-				selectedMark: '√',
 				passwdLen:1,
 				passwdMaxlen: 50,
-				lengthOx: 0,
-				lengthX: 0,
-				sliderLx: 1
 			}
 		},
 		methods: {
@@ -86,19 +82,13 @@
 				} else if (this.passwdLen > this.passwdMaxlen){
 					this.passwdLen = this.passwdMaxlen;
 				}
-				this.lengthX = Math.round((this.passwdLen-1)/(this.passwdMaxlen-1)*this.sliderLx);
 			},
-			// lengthSlide(e) {
-			// 	this.lengthOx = e.detail.x;
-			// 	this.passwdLen = 1+Math.round((this.passwdMaxlen-1)*this.lengthOx/this.sliderLx);
-			// },
 			sliderChange(e) {
 				this.passwdLen = e.detail.value;
 			}
 		},
 		created() {
-			const sysInfo = uni.getSystemInfoSync();
-			this.sliderLx = Math.round(sysInfo.windowWidth*340/750)-2;
+			
 		}
 	}
 </script>
@@ -197,29 +187,6 @@
 		width: 60rpx;
 		height: 60rpx;
 		border: 1rpx solid #333333;
-		border-radius: 30rpx;
-	}
-	.length-slide-bar {
-		display: flex;
-		align-items: center;
-		width: 400rpx;
-		height: 6rpx;
-		border: 1rpx solid #333333;
-		border-radius: 6rpx;
-		overflow-y: visible;
-	}
-	.length-slider-ma {
-		width: 100%;
-		height: 60rpx;
-	}
-	.length-slider {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 60rpx;
-		height: 60rpx;
-		background-color: #FFFFFF;
-		border: 1rpx solid #1761E9;
 		border-radius: 30rpx;
 	}
 </style>
