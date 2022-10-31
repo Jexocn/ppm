@@ -7,21 +7,23 @@
 			</view>
 			<view class="charset-list">
 				<view> 字符：</view>
-				<view v-for="(item, index) in passwdCharsets" class="charset-item">
-					<view class="charset-check" @tap="charsetCheck(item)">{{item.selected ? selectedMark : ''}}</view>
-					<view>{{item.title}}</view>
-				</view>
+				<checkbox-group @change="charsetChange">
+					<label v-for="(item, index) in passwdCharsets">
+						<checkbox :disabled="item.disabled" :checked="item.selected" :value="index"/>{{item.title + '&nbsp&nbsp'}}
+					</label>
+				</checkbox-group>
 			</view>
 			<view class="length-box">
 				<view class="length-title"> {{'长度：'+passwdLen}}</view>
 				<view class="length-button" @tap="lengthAdd(-1)">-</view>
-				<view class="length-slide-bar">
+<!-- 				<view class="length-slide-bar">
 					<movable-area class="length-slider-ma">
 						<movable-view class="length-slider" direction="horizontal" :x="lengthX" @change="lengthSlide" :animation="false">
 							{{'<>'}}
 						</movable-view>
 					</movable-area>
-				</view>
+				</view> -->
+				<slider :value="passwdLen" min="1" :max="passwdMaxlen" step="1" @change="sliderChange" @changing="sliderChange" style="width: 360rpx;"/>
 				<view class="length-button" @tap="lengthAdd(1)">+</view>
 			</view>
 			<view class="gen-button" @tap="genPasswd">生成密码</view>
@@ -37,10 +39,10 @@
 			return {
 				passwd:'abc',
 				passwdCharsets: [
-					{id:0, title:'ABC', selected:false},
-					{id:1, title:'abc', selected:false},
-					{id:2, title:'123', selected:true},
-					{id:3, title:'#$&', selected:false}
+					{id:0, title:'ABC', selected:false, disabled:false},
+					{id:1, title:'abc', selected:false, disabled:false},
+					{id:2, title:'123', selected:true, disabled:true},
+					{id:3, title:'#$&', selected:false, disabled:false}
 				],
 				selectedMark: '√',
 				passwdLen:1,
@@ -51,29 +53,31 @@
 			}
 		},
 		methods: {
-			charsetCheck(item) {
-				if(item.selected) {
-					let n = 0;
-					this.passwdCharsets.forEach((v)=>n+=v.selected);
-					if(n == 1) {
-						return
-					}
-				}
-				item.selected = !item.selected;
+			charsetChange(e) {
+				let checked = e.detail.value;
+				let disabled = checked.length == 1;
+				checked.forEach((id)=>{
+					let item = this.passwdCharsets[id];
+					item.selected = true;
+					item.disabled = disabled;
+				})
 			},
-			genPasswd() {
+			async genPasswd() {
+				let randomArray = null;
 				// #ifndef MP-WEIXIN
-				let a = new Uint32Array(4);
-				console.log("++++", crypto.getRandomValues(a));
+				randomArray = new Uint8Array(32);
+				crypto.getRandomValues(randomArray);
 				// #endif
 				// #ifdef MP-WEIXIN
 				wx.getRandomValues({
-				  length: 16, // 生成 6 个字节长度的随机数
+				  length: 32, // 生成 6 个字节长度的随机数
 				  success: res => {
-				    console.log(wx.arrayBufferToBase64(res.randomValues)) // 转换为 base64 字符串后打印
+					randomArray = new Uint8Array(res.randomValues);
+					console.log("++++ 1", randomArray);
 				  }
 				})
 				// #endif
+				console.log("++++ 2", randomArray);
 			},
 			lengthAdd(add) {
 				this.passwdLen += add;
@@ -84,9 +88,12 @@
 				}
 				this.lengthX = Math.round((this.passwdLen-1)/(this.passwdMaxlen-1)*this.sliderLx);
 			},
-			lengthSlide(e) {
-				this.lengthOx = e.detail.x;
-				this.passwdLen = 1+Math.round((this.passwdMaxlen-1)*this.lengthOx/this.sliderLx);
+			// lengthSlide(e) {
+			// 	this.lengthOx = e.detail.x;
+			// 	this.passwdLen = 1+Math.round((this.passwdMaxlen-1)*this.lengthOx/this.sliderLx);
+			// },
+			sliderChange(e) {
+				this.passwdLen = e.detail.value;
 			}
 		},
 		created() {
@@ -181,7 +188,7 @@
 	.length-title {
 		display: flex;
 		align-items: center;
-		width: 140rpx;
+		width: 160rpx;
 	}
 	.length-button {
 		display: flex;
