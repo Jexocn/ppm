@@ -3,7 +3,7 @@
 		<view class="bg"></view>
 		<view class="content">
 			<view class="passwd-label">
-				{{passwd}}
+				<text>{{passwd}}</text>
 			</view>
 			<view class="charset-list">
 				<view> 字符：</view>
@@ -30,43 +30,83 @@
 	export default {
 		data() {
 			return {
-				passwd:'abc',
+				passwd:'',
 				passwdCharsets: [
-					{id:0, title:'ABC', selected:false, disabled:false},
-					{id:1, title:'abc', selected:false, disabled:false},
-					{id:2, title:'123', selected:true, disabled:true},
-					{id:3, title:'#$&', selected:false, disabled:false}
+					{title:'ABC', selected:false, size:26, disabled:false},
+					{title:'abc', selected:false, size:26, disabled:false},
+					{title:'123', selected:true, size:10, disabled:true},
+					{title:'#$&', selected:false, size:28, disabled:false}
 				],
 				passwdLen:1,
 				passwdMaxlen: 50,
+				specSymbols:'~!@#$%^&*()_-+={[}]|:;<,>.?/',
+				name:'google.com',
+				key:'123456',
 			}
 		},
 		methods: {
 			charsetChange(e) {
 				let checked = e.detail.value;
 				let disabled = checked.length == 1;
-				checked.forEach((id)=>{
-					let item = this.passwdCharsets[id];
-					item.selected = true;
-					item.disabled = disabled;
-				})
+				this.passwdCharsets.forEach((item, idx)=>{
+					item.selected = checked.includes(idx);
+					item.disabled = disabled && item.selected;
+				});
 			},
-			async genPasswd() {
-				let randomArray = null;
-				// #ifndef MP-WEIXIN
-				randomArray = new Uint8Array(32);
-				crypto.getRandomValues(randomArray);
-				// #endif
-				// #ifdef MP-WEIXIN
-				wx.getRandomValues({
-				  length: 32, // 生成 6 个字节长度的随机数
-				  success: res => {
-					randomArray = new Uint8Array(res.randomValues);
-					console.log("++++ 1", randomArray);
-				  }
+			getChar(setId, charIdx) {
+				let charset = this.passwdCharsets[setId];
+				charIdx = charIdx % charset.size;
+				if(setId == 3) {
+					return this.specSymbols[charIdx];
+				}
+				if(setId == 2) {
+					return String.fromCharCode('0'.charCodeAt(0)+charIdx);
+				}
+				return String.fromCharCode(charset.title.charCodeAt(0)+charIdx);
+			},
+			genPasswd() {
+				let len = this.passwdLen;
+				let selected = [];
+				this.passwdCharsets.forEach((v, k)=>{
+					if(v.selected) {
+						selected.push(k);
+					}
+				});
+				let p = new Promise((resolve, reject) => {
+					let randomArray = null;
+					// #ifndef MP-WEIXIN
+					randomArray = new Uint8Array(len*3);
+					crypto.getRandomValues(randomArray);
+					resolve(randomArray);
+					// #endif
+					// #ifdef MP-WEIXIN
+					wx.getRandomValues({
+					  length: len*3,
+					  success: res => {
+						randomArray = new Uint8Array(res.randomValues);
+						resolve(randomArray);
+					  },
+					  fail: () => {
+						  reject("wx.getRandomValues fail");
+					  }
+					})
+					// #endif
 				})
-				// #endif
-				console.log("++++ 2", randomArray);
+				p.then((randomArray)=>{
+					let buf = new ArrayBuffer(64);
+					let i32View = new Int32Array(buf);
+					cryptoJS.SHA3(this.name+this.key, {outputLength:512}).words.forEach((v, k)=>{
+						i32View[k] = v
+					});
+					let u8View = new Uint8Array(buf);
+					let pwd = [];
+					for (let k=0; k < len; k++) {
+						let charIdx = u8View[randomArray[k]%64] ^ randomArray[len+k];
+						let setId = selected[randomArray[2*len+k]%selected.length];
+						pwd.push(this.getChar(setId, charIdx));
+					}
+					this.passwd = pwd.join('');
+				})
 			},
 			lengthAdd(add) {
 				this.passwdLen += add;
@@ -104,8 +144,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 700rpx;
-		height: 96rpx;
+		width: 680rpx;
+		height: 288rpx;
 		background: #FFFFFF;
 		box-shadow: 1rpx 1rpx 13rpx 0rpx rgba(0,0,0,0.08);
 		border-radius: 20rpx;
@@ -114,6 +154,9 @@
 		font-weight: 400;
 		color: #333333;
 		margin-top: 20rpx;
+		padding-left: 20rpx;
+		padding-right: 10rpx;
+		word-break: break-all;
 	}
 	.charset-list {
 		display: flex;
@@ -125,21 +168,6 @@
 		font-weight: 600;
 		color: #333333;
 		margin-top: 40rpx;
-	}
-	.charset-item {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		width: 150rpx;
-	}
-	.charset-check {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 30rpx;
-		height: 30rpx;
-		border: 1rpx solid #333333;
-		margin-right: 10rpx;
 	}
 	.gen-button {
 		display: flex;
