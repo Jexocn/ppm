@@ -46,7 +46,7 @@
 		},
 		methods: {
 			charsetChange(e) {
-				let checked = e.detail.value;
+				let checked = Array.from(e.detail.value, v=>parseInt(v));	// e.detail.value 不能直接用，微信小程序是字符数组，H5是整型数组
 				let disabled = checked.length == 1;
 				this.passwdCharsets.forEach((item, idx)=>{
 					item.selected = checked.includes(idx);
@@ -63,6 +63,17 @@
 					return String.fromCharCode('0'.charCodeAt(0)+charIdx);
 				}
 				return String.fromCharCode(charset.title.charCodeAt(0)+charIdx);
+			},
+			Uint8ToBase64(u8Arr) {
+				// return btoa(String.fromCharCode(...u8Arr));
+				return uni.arrayBufferToBase64(u8Arr);
+			},
+			Base64ToUint8(b64Str) {
+				// let decodedStr = atob(b64Str);
+				// let decodedBuf = new Uint8Array(decodedStr.length);
+				// decodedBuf.forEach((v, k)=>decodedBuf[k]=decodedStr.charCodeAt(k));
+				// return decodedBuf;
+				return new Uint8Array(uni.base64ToArrayBuffer(b64Str));
 			},
 			genPasswd() {
 				let len = this.passwdLen;
@@ -106,6 +117,11 @@
 						pwd.push(this.getChar(setId, charIdx));
 					}
 					this.passwd = pwd.join('');
+					// ArrayBuffer Base64 互转
+					let randomStr = this.Uint8ToBase64(randomArray)
+					let decodedBuf = this.Base64ToUint8(randomStr);
+					console.log('++++', randomStr);
+					console.log('----', randomArray, decodedBuf)
 				})
 			},
 			lengthAdd(add) {
